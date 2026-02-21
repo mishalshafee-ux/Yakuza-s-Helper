@@ -5,6 +5,8 @@ import json
 import os
 from datetime import datetime, timedelta
 import asyncio
+from flask import Flask
+import threading
 
 
 # Intents setup
@@ -439,28 +441,6 @@ async def unban(interaction: discord.Interaction, user_id: int):
         await interaction.response.send_message(embed=embed)
     except Exception as e:
         await interaction.response.send_message(f"❌ Error unbanning user: {e}", ephemeral=True)
-
-
-
-# Keep alive web server
-import threading
-from flask import Flask
-
-app = Flask('')
-
-@app.route('/')
-def home():
-    return "Bot is running"
-
-def run():
-    app.run(host='0.0.0.0', port=10000)
-
-def keep_alive():
-    t = threading.Thread(target=run)
-    t.start()
-
-keep_alive()
-
 
 # Token
 import os
