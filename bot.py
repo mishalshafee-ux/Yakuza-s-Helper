@@ -66,98 +66,101 @@ async def say(interaction: discord.Interaction, message: str):
     await interaction.response.send_message(message)
 
 # ==================== SUPPORT TICKET SYSTEM ====================
+SUPPORT_ROLES = []  # Add the role IDs of staff who should see tickets
+MANAGEMENT_ROLES = []  # Add management role IDs
+
 @bot.tree.command(name="ticketsetup", description="Creates the support ticket embed")
 @app_commands.checks.has_permissions(administrator=True)
 async def ticket_setup(interaction: discord.Interaction):
     """Creates the support ticket embed"""
     embed = discord.Embed(
         title="🎟️ Support Ticket System",
-        description="Click the button below to create a support ticket",
+        description="Click a button below to create a ticket",
         color=discord.Color.blue(),
         timestamp=datetime.now()
     )
     embed.set_footer(text="Support System", icon_url=interaction.guild.icon.url if interaction.guild.icon else None)
     
-    view = TicketView()
+    view = TicketCategoryView()
     await interaction.response.send_message(embed=embed, view=view)
 
-class TicketButton(discord.ui.Button):
+# ------------------- Ticket Category Buttons -------------------
+class TicketCategoryView(discord.ui.View):
     def __init__(self):
-        super().__init__(
-            style=discord.ButtonStyle.green,
-            label="Create Ticket",
-            emoji="🎫"
-        )
-    
+        super().__init__(timeout=None)
+        self.add_item(TicketCategoryButton(label="Support", category="Support", roles=SUPPORT_ROLES,
+                                           banner="https://i.imgur.com/SupportBanner.png"))
+        self.add_item(TicketCategoryButton(label="Management", category="Management", roles=MANAGEMENT_ROLES,
+                                           banner="https://i.imgur.com/ManagementBanner.png"))
+
+class TicketCategoryButton(discord.ui.Button):
+    def __init__(self, label, category, roles, banner):
+        super().__init__(style=discord.ButtonStyle.green, label=label, emoji="🎫")
+        self.category = category
+        self.roles = roles
+        self.banner = banner
+
     async def callback(self, interaction: discord.Interaction):
         guild = interaction.guild
         user = interaction.user
-        
-        # Check if user already has an open ticket
         tickets = load_json(TICKETS_FILE)
         user_id = str(user.id)
-        
-        if user_id in tickets and tickets[user_id]['status'] == 'open':
-            await interaction.response.send_message(
-                "❌ You already have an open ticket!",
-                ephemeral=True
-            )
+
+        # Check for existing ticket
+        if user_id in tickets and tickets[user_id]['status'] == "open":
+            await interaction.response.send_message("❌ You already have an open ticket!", ephemeral=True)
             return
-        
-        # Create private channel
+
+        # Permissions
         overwrites = {
             guild.default_role: discord.PermissionOverwrite(read_messages=False),
             user: discord.PermissionOverwrite(read_messages=True, send_messages=True),
             guild.me: discord.PermissionOverwrite(read_messages=True, send_messages=True)
         }
-        
-        channel = await guild.create_text_channel(
-            f"ticket-{user.name}",
-            overwrites=overwrites,
-            category=None
-        )
-        
-        # Save ticket info
-        if user_id not in tickets:
-            tickets[user_id] = {}
-        
-        tickets[user_id] = {
-            'channel_id': channel.id,
-            'created_at': datetime.now().isoformat(),
-            'status': 'open'
-        }
+        for role_id in self.roles:
+            role = guild.get_role(role_id)
+            if role:
+                overwrites[role] = discord.PermissionOverwrite(read_messages=True, send_messages=True)
+
+        # Create channel
+        channel = await guild.create_text_channel(f"ticket-{user.name}", overwrites=overwrites)
+
+        tickets[user_id] = {"channel_id": channel.id, "status": "open", "category": self.category,
+                            "created_at": datetime.now().isoformat()}
         save_json(TICKETS_FILE, tickets)
-        
-        # Send message in ticket channel
-        close_view = CloseTicketView()
+
+        # Send ticket embed with banner
         embed = discord.Embed(
-            title="🎫 Support Ticket",
-            description=f"Welcome {user.mention}! A staff member will be with you shortly.",
+            title=f"🎫 {self.category} Ticket",
+            description=f"Welcome {user.mention}! Staff will assist you shortly.",
             color=discord.Color.green()
         )
-        await channel.send(embed=embed, view=close_view)
-        
-        await interaction.response.send_message(
-            f"✅ Ticket created! <#{channel.id}>",
-            ephemeral=True
-        )
+        if self.banner:
+            embed.set_image(url=self.banner)
 
-class TicketView(discord.ui.View):
+        await channel.send(embed=embed, view=TicketChannelView())
+        await interaction.response.send_message(f"✅ Ticket created! <#{channel.id}>", ephemeral=True)
+
+# ------------------- Ticket Channel Buttons -------------------
+class TicketChannelView(discord.ui.View):
     def __init__(self):
         super().__init__(timeout=None)
-        self.add_item(TicketButton())
+        self.add_item(ClaimTicketButton())
+        self.add_item(CloseTicketButton())
+
+class ClaimTicketButton(discord.ui.Button):
+    def __init__(self):
+        super().__init__(style=discord.ButtonStyle.blurple, label="Claim Ticket", emoji="🖐️")
+
+    async def callback(self, interaction: discord.Interaction):
+        await interaction.response.send_message(f"✅ {interaction.user.mention} claimed this ticket!", ephemeral=True)
 
 class CloseTicketButton(discord.ui.Button):
     def __init__(self):
-        super().__init__(
-            style=discord.ButtonStyle.red,
-            label="Close Ticket",
-            emoji="❌"
-        )
-    
+        super().__init__(style=discord.ButtonStyle.red, label="Close Ticket", emoji="❌")
+
     async def callback(self, interaction: discord.Interaction):
         tickets = load_json(TICKETS_FILE)
-        
         for user_id, data in tickets.items():
             if data['channel_id'] == interaction.channel.id:
                 tickets[user_id]['status'] = 'closed'
@@ -172,13 +175,8 @@ class CloseTicketButton(discord.ui.Button):
                 await asyncio.sleep(2)
                 await interaction.channel.delete()
                 return
-        
-        await interaction.response.send_message("❌ Ticket not found!", ephemeral=True)
 
-class CloseTicketView(discord.ui.View):
-    def __init__(self):
-        super().__init__(timeout=None)
-        self.add_item(CloseTicketButton())
+        await interaction.response.send_message("❌ Ticket not found!", ephemeral=True)
 
 # ==================== INFRACTIONS SYSTEM ====================
 @bot.tree.command(name="infraction", description="Add an infraction to a member")
