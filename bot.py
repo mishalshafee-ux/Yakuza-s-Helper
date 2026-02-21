@@ -6,6 +6,7 @@ import os
 from datetime import datetime, timedelta
 import asyncio
 
+
 # Intents setup
 intents = discord.Intents.default()
 intents.message_content = True
@@ -440,4 +441,4 @@ async def unban(interaction: discord.Interaction, user_id: int):
         await interaction.response.send_message(f"❌ Error unbanning user: {e}", ephemeral=True)
 
 # Run the bot
-bot.run("YOUR_TOKEN_HERE")
+bot.run(os.getenv("TOKEN"))
