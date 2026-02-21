@@ -440,11 +440,9 @@ async def unban(interaction: discord.Interaction, user_id: int):
     except Exception as e:
         await interaction.response.send_message(f"❌ Error unbanning user: {e}", ephemeral=True)
 
-# Run the bot
-import os
-bot.run(os.getenv("DISCORD_TOKEN"))
 
-# Keep alive -can be removed-
+
+# Keep alive web server
 import threading
 from flask import Flask
 
@@ -462,3 +460,14 @@ def keep_alive():
     t.start()
 
 keep_alive()
+
+
+# Token
+import os
+
+TOKEN = os.getenv("DISCORD_TOKEN")
+
+if not TOKEN:
+    raise ValueError("DISCORD_TOKEN not found in environment variables.")
+
+bot.run(TOKEN)
