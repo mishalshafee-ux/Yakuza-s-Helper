@@ -442,6 +442,24 @@ async def unban(interaction: discord.Interaction, user_id: int):
     except Exception as e:
         await interaction.response.send_message(f"❌ Error unbanning user: {e}", ephemeral=True)
 
+
+# Running 24/7
+import os
+from flask import Flask
+import threading
+
+app = Flask("")
+
+@app.route("/")
+def home():
+    return "Bot is running!"
+
+def run():
+    port = int(os.environ.get("PORT", 8080))  # Render provides a PORT env variable
+    app.run(host="0.0.0.0", port=port)
+
+threading.Thread(target=run).start()
+
 # Token
 import os
 
