@@ -1,3 +1,20 @@
+from flask import Flask
+import threading
+import os
+
+app = Flask("")
+
+@app.route("/")
+def home():
+    return "Bot is running!"
+
+def run_flask():
+    # Render provides PORT environment variable
+    port = int(os.environ.get("PORT", 10000))
+    app.run(host="0.0.0.0", port=port)
+
+# Run Flask in a separate thread
+threading.Thread(target=run_flask).start()
 import discord
 from discord.ext import commands
 from discord import app_commands
