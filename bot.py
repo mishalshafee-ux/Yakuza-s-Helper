@@ -441,7 +441,10 @@ async def unban(interaction: discord.Interaction, user_id: int):
         await interaction.response.send_message(f"❌ Error unbanning user: {e}", ephemeral=True)
 
 # Run the bot
-bot.run(os.getenv("TOKEN"))
+import os
+bot.run(os.getenv("DISCORD_TOKEN"))
+
+# Keep alive -can be removed-
 import threading
 from flask import Flask
 
