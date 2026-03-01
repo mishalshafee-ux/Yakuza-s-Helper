@@ -95,9 +95,9 @@ class TicketCategoryView(discord.ui.View):
     def __init__(self):
         super().__init__(timeout=None)
         self.add_item(TicketCategoryButton(label="Support", category="Support", roles=[1448361743129514257],
-                                           banner=none))
+                                           banner=None))
         self.add_item(TicketCategoryButton(label="Management", category="Management", roles=[1448361815187787887],
-                                           banner=none))
+                                           banner=None))
 
 class TicketCategoryButton(discord.ui.Button):
     def __init__(self, label, category, roles, banner):
