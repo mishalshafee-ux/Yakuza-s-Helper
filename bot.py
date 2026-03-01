@@ -94,10 +94,10 @@ async def ticket_setup(interaction: discord.Interaction):
 class TicketCategoryView(discord.ui.View):
     def __init__(self):
         super().__init__(timeout=None)
-        self.add_item(TicketCategoryButton(label="Support", category="Support", roles=1448361743129514257,
-                                           banner="/Users/mishalshafeeq/Downloads/The Yakuza Family Do not mess with us..png"))
-        self.add_item(TicketCategoryButton(label="Management", category="Management", roles=1448361815187787887,
-                                           banner="https://i.imgur.com/ManagementBanner.png"))
+        self.add_item(TicketCategoryButton(label="Support", category="Support", roles=[1448361743129514257],
+                                           banner=none))
+        self.add_item(TicketCategoryButton(label="Management", category="Management", roles=[1448361815187787887],
+                                           banner=none))
 
 class TicketCategoryButton(discord.ui.Button):
     def __init__(self, label, category, roles, banner):
@@ -468,6 +468,7 @@ async def unban(interaction: discord.Interaction, user_id: int):
 
 
 # Token
+
 keep_alive()
 
 TOKEN = os.getenv("DISCORD_TOKEN")
