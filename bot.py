@@ -22,7 +22,6 @@ def keep_alive():
 
 
 # Run Flask in a separate thread
-threading.Thread(target=run_flask).start()
 import discord
 from discord.ext import commands
 from discord import app_commands
@@ -467,7 +466,6 @@ async def unban(interaction: discord.Interaction, user_id: int):
 
 
 
-keep_alive()
 
 # Token
 keep_alive()
