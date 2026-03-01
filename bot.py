@@ -1,6 +1,7 @@
-from flask import Flask
-import threading
-import os
+def keep_alive():
+    thread = threading.Thread(target=run_flask)
+    thread.daemon = True
+    thread.start()
 
 app = Flask("")
 
@@ -460,8 +461,10 @@ async def unban(interaction: discord.Interaction, user_id: int):
 
 
 
+keep_alive()
+
 # Token
-import os
+keep_alive()
 
 TOKEN = os.getenv("DISCORD_TOKEN")
 
