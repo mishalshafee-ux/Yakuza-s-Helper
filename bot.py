@@ -1,17 +1,25 @@
-def keep_alive():
-    thread = threading.Thread(target=run_flask)
-    thread.daemon = True
-    thread.start()
+from flask import Flask
+import threading
+import os
 
+app = Flask(__name__)
 
 @app.route("/")
 def home():
     return "Bot is running!"
 
 def run_flask():
-    # Render provides PORT environment variable
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
+
+def keep_alive():
+    thread = threading.Thread(target=run_flask)
+    thread.daemon = True
+    thread.start()
+
+
+
+
 
 # Run Flask in a separate thread
 threading.Thread(target=run_flask).start()
@@ -22,8 +30,7 @@ import json
 import os
 from datetime import datetime, timedelta
 import asyncio
-from flask import Flask
-import threading
+
 
 
 # Intents setup
