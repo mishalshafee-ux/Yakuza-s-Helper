@@ -3,7 +3,6 @@ def keep_alive():
     thread.daemon = True
     thread.start()
 
-app = Flask("")
 
 @app.route("/")
 def home():
